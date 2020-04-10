@@ -16,6 +16,9 @@ body {
   height: 256px;
   padding: 0;
   margin: 0;
+  display: inline-block;
+  font-size: 32px;
+  color: white;
 }
 </style>
 </style>
@@ -24,12 +27,8 @@ body {
 
 <div id="main" style="_border: 1px solid #AAA; height: 512px; width: 512px; font-size: 0; overflow-x: hidden">
   <div class="column" id="column-1" style="background: red;">
-    <div class="tile" id="test" style=""></div>
-    <div class="tile" id="test" style=""></div>  
   </div>
   <div class="column" id="column-2" style="background: blue;">
-    <div class="tile" id="test" style=""></div>
-    <div class="tile" id="test" style=""></div>  
   </div>
 </div>
 
@@ -58,7 +57,7 @@ function draw(el, timePassed) {
 start()
 */
 
-const FPS = 50
+const FPS = 60
 let frameWidth = 0
 const screenWidth = document.body.clientWidth
 
@@ -76,8 +75,7 @@ function moveRight(el, distance, time, cb) {
     //   el.style.left = -frameWidth
     //   cb()
     // }
-    if (el.offsetLeft >= screenWidth) {
-      console.log(distanceCovered, distance, frameWidth)
+    if (el.offsetLeft >= frameWidth) {
       cb()
       el.style.left = -frameWidth
     }
@@ -86,8 +84,19 @@ function moveRight(el, distance, time, cb) {
     // console.log(newLeft)
     el.style.left = newLeft
   }, frameDelay)
+  return timer
 }
 
+function addTiles(frame, noOfTiles, color) {
+  for (let i = 0; i < noOfTiles; i++) {
+    let $tile = document.createElement('div')
+    $tile.classList.add('tile')
+    // $tile.style.background = '#' + ((1<<24)*Math.random()|0).toString(16)
+    $tile.style.backgroundColor = `rgba(${color}, ${1/i})`
+    $tile.innerHTML = i
+    frame.append($tile)
+  }
+}
 
 window.onload = function () {
   let $main = document.getElementById('main')
@@ -98,6 +107,8 @@ window.onload = function () {
   $c1.style.width = frameWidth
   $c2.style.width = frameWidth
   $main.style.width = screenWidth
+  addTiles($c1, tilesPerFrame * 2, '0,0,0')
+  addTiles($c2, tilesPerFrame * 2,  '8,8,8')
 
   console.log('frameWidth', frameWidth)
   console.log('tilesPerFrame', tilesPerFrame)
@@ -106,12 +117,9 @@ window.onload = function () {
 
   $c1.style.left = -frameWidth
   $c2.style.left = 0
-  moveRight($c1, frameWidth * 2, 5, function () {
-    console.log('done 1');
-  })
-  moveRight($c2, frameWidth * 2, 5, function () {
-    console.log('done 2');
-  })
+  // let t1 = moveRight($c1, frameWidth * 2, 10, function () {})
+  let t2 = moveRight($c2, frameWidth * 2, 10, function () {})
+  // clearInterval(t2)
 }
 
 </script>
