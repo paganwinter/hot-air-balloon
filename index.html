@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>Earth</title>
+<style>
+body {
+  margin: 0;
+}
+.column {
+  display: inline-block;
+  position: absolute;
+  width: 512px;
+  background: red;
+}
+.tile {
+  width: 256px;
+  height: 256px;
+  padding: 0;
+  margin: 0;
+}
+</style>
+</style>
+</head>
+<body>
+
+<div id="main" style="_border: 1px solid #AAA; height: 512px; width: 512px; font-size: 0;">
+  <div class="column" id="column-1">
+    <div class="tile" id="test" style=""></div>
+    <div class="tile" id="test" style=""></div>  
+  </div>
+  <!-- <div class="column" id="column-2">
+    <div class="tile" id="test" style="background: url(https://tile.openstreetmap.org/7/63/42.png);"></div>
+    <div class="tile" id="test" style="background: url(https://tile.openstreetmap.org/7/63/42.png);"></div>  
+  </div> -->
+</div>
+
+<script>
+function long2tile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
+function lat2tile(lat, zoom)  { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
+// https://tile.openstreetmap.org/7/63/42.png
+
+let $c1 = document.getElementById('column-1')
+let $c2 = document.getElementById('column-2')
+const width = document.body.clientWidth
+
+/*
+function start() {
+  let start = Date.now(); // remember start time
+  let timer = setInterval(function() {
+    let timePassed = Date.now() - start;
+
+    if (timePassed >= 2000) {
+      clearInterval(timer); // finish the animation after 2 seconds
+      return;
+    }
+    draw($c1, timePassed);
+  }, 10);
+}
+// as timePassed goes from 0 to 2000
+// left gets values from 0px to 400px
+function draw(el, timePassed) {
+  el.style.left = timePassed / 5 + 'px';
+}
+start()
+*/
+
+const FPS = 50
+moveRight($c1, 512, 2, function () {
+  console.log('done');
+  console.timeEnd('t')
+})
+
+function moveRight(el, distance, time, cb) {
+  let frames = FPS * time
+  const pixelsPerFrame = distance / frames
+  const frameDelay = 1000 / FPS
+  console.time('t')
+
+  let startLeft = el.offsetLeft
+  let timer = setInterval(function () {
+    let distanceCovered = el.offsetLeft - startLeft
+    if (distanceCovered >= distance) {
+      el.style.left = -512
+      // clearInterval(timer)
+      // return cb()
+    }
+
+    el.style.left = `${el.offsetLeft + pixelsPerFrame}px`
+  }, frameDelay)
+}
+
+</script>
+
+</body>
+</html>
