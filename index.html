@@ -9,7 +9,7 @@ body {
   display: inline-block;
   position: absolute;
   width: 512px;
-  background: red;
+  /* border-left: 1px solid #000; */
 }
 .tile {
   width: 256px;
@@ -22,26 +22,21 @@ body {
 </head>
 <body>
 
-<div id="main" style="_border: 1px solid #AAA; height: 512px; width: 512px; font-size: 0;">
-  <div class="column" id="column-1">
+<div id="main" style="_border: 1px solid #AAA; height: 512px; width: 512px; font-size: 0; overflow-x: hidden">
+  <div class="column" id="column-1" style="background: red;">
     <div class="tile" id="test" style=""></div>
     <div class="tile" id="test" style=""></div>  
   </div>
-  <!-- <div class="column" id="column-2">
-    <div class="tile" id="test" style="background: url(https://tile.openstreetmap.org/7/63/42.png);"></div>
-    <div class="tile" id="test" style="background: url(https://tile.openstreetmap.org/7/63/42.png);"></div>  
-  </div> -->
+  <div class="column" id="column-2" style="background: blue;">
+    <div class="tile" id="test" style=""></div>
+    <div class="tile" id="test" style=""></div>  
+  </div>
 </div>
 
 <script>
 function long2tile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
 function lat2tile(lat, zoom)  { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
 // https://tile.openstreetmap.org/7/63/42.png
-
-let $c1 = document.getElementById('column-1')
-let $c2 = document.getElementById('column-2')
-const width = document.body.clientWidth
-
 /*
 function start() {
   let start = Date.now(); // remember start time
@@ -64,10 +59,8 @@ start()
 */
 
 const FPS = 50
-moveRight($c1, 512, 2, function () {
-  console.log('done');
-  console.timeEnd('t')
-})
+let frameWidth = 0
+const screenWidth = document.body.clientWidth
 
 function moveRight(el, distance, time, cb) {
   let frames = FPS * time
@@ -78,14 +71,47 @@ function moveRight(el, distance, time, cb) {
   let startLeft = el.offsetLeft
   let timer = setInterval(function () {
     let distanceCovered = el.offsetLeft - startLeft
-    if (distanceCovered >= distance) {
-      el.style.left = -512
-      // clearInterval(timer)
-      // return cb()
+    // if (distanceCovered >= distance) {
+    //   console.log(distanceCovered, distance, frameWidth)
+    //   el.style.left = -frameWidth
+    //   cb()
+    // }
+    if (el.offsetLeft >= screenWidth) {
+      console.log(distanceCovered, distance, frameWidth)
+      cb()
+      el.style.left = -frameWidth
     }
 
-    el.style.left = `${el.offsetLeft + pixelsPerFrame}px`
+    let newLeft = el.offsetLeft + pixelsPerFrame
+    // console.log(newLeft)
+    el.style.left = newLeft
   }, frameDelay)
+}
+
+
+window.onload = function () {
+  let $main = document.getElementById('main')
+  let $c1 = document.getElementById('column-1')
+  let $c2 = document.getElementById('column-2')
+  const tilesPerFrame = Math.ceil(screenWidth / 256)
+  frameWidth = tilesPerFrame * 256
+  $c1.style.width = frameWidth
+  $c2.style.width = frameWidth
+  $main.style.width = screenWidth
+
+  console.log('frameWidth', frameWidth)
+  console.log('tilesPerFrame', tilesPerFrame)
+  console.log('frameWidth', frameWidth)
+
+
+  $c1.style.left = -frameWidth
+  $c2.style.left = 0
+  moveRight($c1, frameWidth * 2, 5, function () {
+    console.log('done 1');
+  })
+  moveRight($c2, frameWidth * 2, 5, function () {
+    console.log('done 2');
+  })
 }
 
 </script>
