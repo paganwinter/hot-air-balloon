@@ -81,14 +81,25 @@ window.onload = function() {
 
   let imgWidth = 0
 
-  let zoom = (window.location.hash) ? window.location.hash.substr(1) : 0
-  let scrollSpeed = 4
+  const urlParams = new URLSearchParams(window.location.search)
+  let zoom = urlParams.get('zoom') || 0
+  let scrollSpeed = urlParams.get('speed') || 8 // Math.pow(2, zoom)
+  let yVal = parseInt(urlParams.get('y'))
+  zoom = parseInt(zoom)
+  scrollSpeed = parseInt(scrollSpeed)
+
   let tileCount = Math.pow(2, zoom)
   let x2Start = tileCount - 1
 
   let x2 = x2Start
   let x1 = x2 - 1
-  let y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
+  let y
+
+  if (yVal) {
+    y = yVal
+  } else {
+    y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
+  }
   let z = zoom
 
   console.log({ x1, x2, y, z, zoom, scrollSpeed, tileCount })
@@ -98,14 +109,18 @@ window.onload = function() {
     ctx.drawImage(img1, imgWidth - can.width, 0)
     imgWidth += scrollSpeed
 
-    if (imgWidth == can.width) {
-      x2 -= 1
+    if (imgWidth === can.width) {
+      x2 = x2 - 1
       if (x2 < 0) {
         x2 = x2Start
       }
       x1 = x2 - 1
       if (x1 < 0) {
         x1 = x2Start
+      }
+      if (x1 > 0) {
+        let imgPreload = new Image()
+        imgPreload.src = `https://tile.openstreetmap.org/${z}/${x1 - 1}/${y}.png`
       }
 
       let img1Url = `https://tile.openstreetmap.org/${z}/${x1}/${y}.png`
