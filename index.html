@@ -242,8 +242,12 @@ window.onload = function() {
   const urlParams = new URLSearchParams(window.location.search)
   let zoom = parseInt(urlParams.get('zoom')) || 0
   let y = parseInt(urlParams.get('y')) || 0
-  let x = parseInt(urlParams.get('x'))
+  let x = parseInt(urlParams.get('x')) || 0
   // y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
+
+  document.getElementById('zoom').value = zoom
+  document.getElementById('y-axis').value = y
+  document.getElementById('x-axis').value = x
 
   loop(zoom, y, x)
 }
