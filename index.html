@@ -25,8 +25,8 @@ body {
 #main {
   position: relative;
   overflow: hidden;
-  _border: 1px solid black;
-  width: 256px;
+  /* border: 1px solid black; */
+  width: 512px;
   height: 768px;
   margin: 10px auto;
 }
@@ -54,6 +54,11 @@ body {
     <div class="tile"></div>
   </div>
   <div class="frame" id="frame-2">
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+  </div>
+  <div class="frame" id="frame-3">
     <div class="tile"></div>
     <div class="tile"></div>
     <div class="tile"></div>
@@ -142,6 +147,7 @@ const pixelsPerSecondMap = {
 <script>
 $frame1 = document.getElementById('frame-1')
 $frame2 = document.getElementById('frame-2')
+$frame3 = document.getElementById('frame-3')
 
 
 const FPS = 60
@@ -197,38 +203,38 @@ function loop(zoom, y, x) {
     y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
   }
 
-  let x2Start = x || tileCount - 1
-  let x2 = x2Start
+  let xStart = x || tileCount - 1
+  // let x2Start = x || tileCount - 1
+  let x3 = xStart
+  let x2 = x3 - 1
   let x1 = x2 - 1
 
-  let lx1 = -256
-  let img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
-  // $frame1.style.backgroundImage = `url('${img1Url}')`
+  let lx1 = -512
+  // let img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
   $frame1.querySelectorAll('.tile').forEach(($tile, i) => {
     $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x1}/${y + i}.png')`
   })
 
-  let lx2 = 0
-  let img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
-  // $frame2.style.backgroundImage = `url('${img2Url}')`
+  let lx2 = -256
+  // let img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
   $frame2.querySelectorAll('.tile').forEach(($tile, i) => {
     $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x2}/${y + i}.png')`
   })
 
+  let lx3 = 0
+  $frame3.querySelectorAll('.tile').forEach(($tile, i) => {
+    $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x3}/${y + i}.png')`
+  })
+
   timer = setInterval(function () {
     lx1 += stepSize
-    lx2 += stepSize
-
-    if (lx1 >= 256) {
+    if (lx1 >= 512) {
       lx1 = -256
       x1 = x2 - 1
-      if (x1 < 0) x1 = x2Start
-      img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
-      // $frame1.style.backgroundImage = `url('${img1Url}')`
+      if (x1 < 0) x1 = xStart
       $frame1.querySelectorAll('.tile').forEach(($tile, i) => {
         $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x1}/${y + i}.png')`
       })
-
       if (x1 > 10) {
         let preloadImg = new Image()
         preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 1}/${y}.png`
@@ -245,22 +251,28 @@ function loop(zoom, y, x) {
     }
     $frame1.style.left = lx1
 
-    if (lx2 >= 256) {
+    lx2 += stepSize
+    if (lx2 >= 512) {
       lx2 = -256
       x2 = x1 - 1
-      if (x2 < 0) x1 = x2Start
-      img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
-      // $frame2.style.backgroundImage = `url('${img2Url}')`
+      if (x2 < 0) x1 = xStart
       $frame2.querySelectorAll('.tile').forEach(($tile, i) => {
         $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x2}/${y + i}.png')`
       })
-
-      if (x2 > 0) {
-        let preloadImg = new Image()
-        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x2 - 1}/${y}.png`
-      }
     }
     $frame2.style.left = lx2
+
+    lx3 += stepSize
+    if (lx3 >= 512) {
+      lx3 = -256
+      x3 = x2 - 1
+      if (x3 < 0) x1 = xStart
+      $frame3.querySelectorAll('.tile').forEach(($tile, i) => {
+        $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x3}/${y + i}.png')`
+      })
+    }
+    $frame3.style.left = lx3
+
   }, ms)
 }
 
