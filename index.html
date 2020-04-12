@@ -66,7 +66,8 @@ body {
 </div>
 
 <input id="zoom" type="range" min="0" max="18" list="tickmarks" onchange="changeZoom(this.value)" />
-<input id="y-axis" type="number" onchange="changeYAxis(this.value)" />
+<input id="y-axis" type="range" min="0" max="1" onchange="changeYAxis(this.value)" />
+<!-- <input id="y-axis" type="number" onchange="changeYAxis(this.value)" /> -->
 <input id="x-axis" type="number" onchange="changeXAxis(this.value)" />
 <!-- <img src="https://tile.openstreetmap.org/7/63/42.png" /> -->
 
@@ -199,29 +200,37 @@ function loop(zoom, y, x) {
   let tileCount = Math.pow(2, zoom)
   let stepSize = getStepSize(zoom)
 
+  document.getElementById('y-axis').max = tileCount - 1
+
   if (!y || (y >= tileCount)) {
     y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
   }
 
   let xStart = x || tileCount - 1
-  // let x2Start = x || tileCount - 1
+
+  let searchParams = new URLSearchParams(window.location.search)
+  searchParams.set('zoom', zoom)
+  searchParams.set('x', xStart)
+  searchParams.set('y', y)
+  // window.location.search = searchParams.toString()
+
   let x3 = xStart
   let x2 = x3 - 1
   let x1 = x2 - 1
 
-  let lx1 = -512
+  let lx1 = -256
   // let img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
   $frame1.querySelectorAll('.tile').forEach(($tile, i) => {
     $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x1}/${y + i}.png')`
   })
 
-  let lx2 = -256
+  let lx2 = 0
   // let img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
   $frame2.querySelectorAll('.tile').forEach(($tile, i) => {
     $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x2}/${y + i}.png')`
   })
 
-  let lx3 = 0
+  let lx3 = 256
   $frame3.querySelectorAll('.tile').forEach(($tile, i) => {
     $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x3}/${y + i}.png')`
   })
@@ -254,8 +263,8 @@ function loop(zoom, y, x) {
     lx2 += stepSize
     if (lx2 >= 512) {
       lx2 = -256
-      x2 = x1 - 1
-      if (x2 < 0) x1 = xStart
+      x2 = x3 - 1
+      if (x2 < 0) x2 = xStart
       $frame2.querySelectorAll('.tile').forEach(($tile, i) => {
         $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x2}/${y + i}.png')`
       })
@@ -265,8 +274,8 @@ function loop(zoom, y, x) {
     lx3 += stepSize
     if (lx3 >= 512) {
       lx3 = -256
-      x3 = x2 - 1
-      if (x3 < 0) x1 = xStart
+      x3 = x1 - 1
+      if (x3 < 0) x3 = xStart
       $frame3.querySelectorAll('.tile').forEach(($tile, i) => {
         $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x3}/${y + i}.png')`
       })
