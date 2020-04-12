@@ -22,19 +22,33 @@ body {
   font-size: 32px;
   color: white;
 }
+.frame {
+  width: 256px;
+  height: 256px;
+  display: inline-block;
+  position: absolute;
+}
+#frame-1 {
+  /* background-color: red; */
+}
+#frame-2 {
+  /* background-color: blue; */
+}
 </style>
 </style>
 </head>
 <body>
 
-<div>
-  <canvas id="canvas1" style="border: 1px solid black; margin: 20px;"></canvas>
+<div id="main" style="position: relative; overflow: hidden; _border: 1px solid black; width: 256px; height: 256px; margin: 10px auto;">
+  <div class="frame" id="frame-1"></div>
+  <div class="frame" id="frame-2"></div>
 </div>
-<span id="coord-x"></span>
-<span id="coord-y"></span>
 
-<!-- <input type="range" min="1" max="100" list="tickmarks" onchange="changeSpeed(this.value)" /> -->
+<input id="zoom" type="range" min="0" max="18" list="tickmarks" onchange="changeZoom(this.value)" />
+<input id="y-axis" type="number" onchange="changeYAxis(this.value)" />
+<input id="x-axis" type="number" onchange="changeXAxis(this.value)" />
 <!-- <img src="https://tile.openstreetmap.org/7/63/42.png" /> -->
+
 
 <script>
 // https://tile.openstreetmap.org/7/63/42.png
@@ -42,13 +56,9 @@ body {
 // const FPS = 60
 // let frameWidth = 0
 // const screenWidth = document.body.clientWidth
-
-const speedMPS = 40075016.686 / (24 * 60 * 60)
-const speedPPS = 0
-
-const metersPerPixel = {
+const metersPerPixelMap = {
   0: 156543.03,
-  1: 78271.52	,
+  1: 78271.52,
   2: 39135.76,
   3: 19567.88,
   4: 9783.94,
@@ -68,75 +78,174 @@ const metersPerPixel = {
   18: 0.5972,
 }
 
-let can = document.getElementById('canvas1')
-let ctx = can.getContext('2d')
-can.width = 256
-can.height = 256
+const stepSizeMap = {
+  0: 0.000049,
+  1: 0.000099,
+  2: 0.000198,
+  3: 0.000395,
+  4: 0.000790,
+  5: 0.001580,
+  6: 0.003161,
+  7: 0.006321,
+  8: 0.012642,
+  9: 0.025284,
+  10: 0.050569,
+  11: 0.101136,
+  12: 0.202269,
+  13: 0.404549,
+  14: 1, // 0.809089,
+  15: 2, // 1.618178,
+  16: 4, // 3.236288,
+  17: 8, // 6.472846,
+  18: 16, // 12.944609,
+}
 
-let img1 = new Image()
-let img2 = new Image()
+const pixelsPerSecondMap = {
+  0: 0.0029629630373419914,
+  1: 0.005925925696134667,
+  2: 0.011851851392269333,
+  3: 0.023703702784538667,
+  4: 0.047407405569077334,
+  5: 0.09481481113815467,
+  6: 0.18963000991157675,
+  7: 0.3792600198231535,
+  8: 0.758513837520063,
+  9: 1.517027675040126,
+  10: 3.034154586534431,
+  11: 6.0681503937035535,
+  12: 12.136142014273489,
+  13: 24.272919129390257,
+  14: 48.54533017012941,
+  15: 97.09066034025882,
+  16: 194.17725609893185,
+  17: 388.37077086453866,
+  18: 776.6765097848602,
+}
+</script>
 
-window.onload = function() {
-  $coordX = document.getElementById('coord-x')
+<script>
+$frame1 = document.getElementById('frame-1')
+$frame2 = document.getElementById('frame-2')
 
-  let imgWidth = 0
 
-  const urlParams = new URLSearchParams(window.location.search)
-  let zoom = urlParams.get('zoom') || 0
-  let scrollSpeed = urlParams.get('speed') || 8 // Math.pow(2, zoom)
-  let yVal = parseInt(urlParams.get('y'))
-  zoom = parseInt(zoom)
-  scrollSpeed = parseInt(scrollSpeed)
+const FPS = 60
+let ms = 1000 / FPS
+const metersPerSecond = 40075016.686 / (24 * 60 * 60)
+
+
+
+function getStepSize(zoom) {
+  let metersPerPixel = metersPerPixelMap[zoom]
+  let pixelsPerSecond = metersPerSecond / metersPerPixel
+
+  let pixelsPerFrame = pixelsPerSecond / FPS
+  let stepSize = pixelsPerFrame
+  console.log({ zoom, pixelsPerSecond, stepSize })
+  // return stepSize
+
+  return stepSizeMap[zoom]
+}
+for (let z = 0; z <= 18; z++) {
+  getStepSize(z)
+}
+
+function changeZoom() {
+  let zoom = parseInt(document.getElementById('zoom').value)
+  let y = parseInt(document.getElementById('y-axis').value)
+  let x = parseInt(document.getElementById('x-axis').value)
+  loop(zoom, y, x)
+}
+function changeYAxis() {
+  let zoom = parseInt(document.getElementById('zoom').value)
+  let y = parseInt(document.getElementById('y-axis').value)
+  let x = parseInt(document.getElementById('x-axis').value)
+  loop(zoom, y, x)
+}
+function changeXAxis() {
+  let zoom = parseInt(document.getElementById('zoom').value)
+  let y = parseInt(document.getElementById('y-axis').value)
+  let x = parseInt(document.getElementById('x-axis').value)
+  loop(zoom, y, x)
+}
+
+let timer
+
+
+function loop(zoom, y, x) {
+  clearInterval(timer)
 
   let tileCount = Math.pow(2, zoom)
-  let x2Start = tileCount - 1
+  let stepSize = getStepSize(zoom)
 
-  let x2 = x2Start
-  let x1 = x2 - 1
-  let y
-
-  if (yVal) {
-    y = yVal
-  } else {
+  if (!y || (y >= tileCount)) {
     y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
   }
-  let z = zoom
 
-  console.log({ x1, x2, y, z, zoom, scrollSpeed, tileCount })
+  let x2Start = x || tileCount - 1
+  let x2 = x2Start
+  let x1 = x2 - 1
 
-  function loop(hrTime) {
-    ctx.drawImage(img2, imgWidth, 0)
-    ctx.drawImage(img1, imgWidth - can.width, 0)
-    imgWidth += scrollSpeed
+  let lx1 = -256
+  let img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
+  $frame1.style.backgroundImage = `url('${img1Url}')`
 
-    if (imgWidth === can.width) {
-      x2 = x2 - 1
-      if (x2 < 0) {
-        x2 = x2Start
-      }
+  let lx2 = 0
+  let img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
+  $frame2.style.backgroundImage = `url('${img2Url}')`
+
+  timer = setInterval(function () {
+    lx1 += stepSize
+    lx2 += stepSize
+
+    if (lx1 >= 256) {
+      lx1 = -256
       x1 = x2 - 1
-      if (x1 < 0) {
-        x1 = x2Start
+      if (x1 < 0) x1 = x2Start
+      img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
+      $frame1.style.backgroundImage = `url('${img1Url}')`
+      // console.log('1:', img1Url)
+
+      if (x1 > 10) {
+        let preloadImg = new Image()
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 1}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 2}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 3}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 4}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 5}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 6}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 7}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 8}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 9}/${y}.png`
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x1 - 10}/${y}.png`
       }
-      if (x1 > 0) {
-        let imgPreload = new Image()
-        imgPreload.src = `https://tile.openstreetmap.org/${z}/${x1 - 1}/${y}.png`
-      }
-
-      let img1Url = `https://tile.openstreetmap.org/${z}/${x1}/${y}.png`
-      let img2Url = `https://tile.openstreetmap.org/${z}/${x2}/${y}.png`
-      img1.src = img1Url
-      img2.src = img2Url
-
-      // $coordX.innerHTML = x2
-      // console.log(img1Url, img2Url, imgWidth)
-
-      imgWidth = 0
     }
+    $frame1.style.left = lx1
 
-    window.requestAnimationFrame(loop)
-  }
-  loop()
+    if (lx2 >= 256) {
+      lx2 = -256
+      x2 = x1 - 1
+      if (x2 < 0) x1 = x2Start
+      img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
+      $frame2.style.backgroundImage = `url('${img2Url}')`
+      // console.log('2:', img2Url)
+
+      if (x2 > 0) {
+        let preloadImg = new Image()
+        preloadImg.src = `https://tile.openstreetmap.org/${zoom}/${x2 - 1}/${y}.png`
+      }
+    }
+    $frame2.style.left = lx2
+  }, ms)
+}
+
+window.onload = function() {
+  const urlParams = new URLSearchParams(window.location.search)
+  let zoom = parseInt(urlParams.get('zoom')) || 0
+  let y = parseInt(urlParams.get('y')) || 0
+  let x = parseInt(urlParams.get('x'))
+  // y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
+
+  loop(zoom, y, x)
 }
 </script>
 
