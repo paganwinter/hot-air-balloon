@@ -157,19 +157,30 @@ const metersPerSecond = 40075016.686 / (24 * 60 * 60)
 
 
 
-function getStepSize(zoom) {
-  let metersPerPixel = metersPerPixelMap[zoom]
-  let pixelsPerSecond = metersPerSecond / metersPerPixel
+function getZoomProps(zoom) {
+  // let tileCount = Math.pow(2, zoom)
+  // let metersPerPixel = metersPerPixelMap[zoom]
+  // let pixelsPerSecond = metersPerSecond / metersPerPixel
+  // let pixelsPerFrame = pixelsPerSecond / FPS
+  // let stepSize = pixelsPerFrame
+  // stepSize = stepSizeMap[zoom]
+  // console.log({ zoom, tileCount, pixelsPerSecond, stepSize })
+  // return { tileCount, stepSize }
 
-  let pixelsPerFrame = pixelsPerSecond / FPS
-  let stepSize = pixelsPerFrame
-  console.log({ zoom, pixelsPerSecond, stepSize })
-  // return stepSize
-
-  return stepSizeMap[zoom]
+  let tileCount = Math.pow(2, zoom)
+  let pixelWidth = tileCount * 256
+  let pixelsPerSecond = pixelWidth / (24 * 60 * 60)
+  let stepSize = pixelsPerSecond / FPS
+  console.log({ zoom, tileCount, pixelsPerSecond, stepSize })
+  return { tileCount, stepSize }
 }
 for (let z = 0; z <= 18; z++) {
-  getStepSize(z)
+  getZoomProps(z)
+}
+
+function getImage(x, y, z) {
+  return `url('https://tile.openstreetmap.org/${z}/${x}/${y}.png')`
+  // return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`
 }
 
 function changeZoom() {
@@ -197,8 +208,9 @@ let timer
 function loop(zoom, y, x) {
   clearInterval(timer)
 
-  let tileCount = Math.pow(2, zoom)
-  let stepSize = getStepSize(zoom)
+  let { tileCount, stepSize } = getZoomProps(zoom)
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get('stepSize')) stepSize = parseInt(urlParams.get('stepSize'))
 
   document.getElementById('y-axis').max = tileCount - 1
 
@@ -214,6 +226,9 @@ function loop(zoom, y, x) {
   searchParams.set('y', y)
   // window.location.search = searchParams.toString()
 
+  // let tileCount = Math.pow(2, zoom)
+  console.log({ tileCount, stepSize, x, y, zoom })
+
   let x3 = xStart
   let x2 = x3 - 1
   let x1 = x2 - 1
@@ -221,18 +236,18 @@ function loop(zoom, y, x) {
   let lx1 = -256
   // let img1Url = `https://tile.openstreetmap.org/${zoom}/${x1}/${y}.png`
   $frame1.querySelectorAll('.tile').forEach(($tile, i) => {
-    $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x1}/${y + i}.png')`
+    $tile.style.backgroundImage = getImage(x1, y+i, zoom)
   })
 
   let lx2 = 0
   // let img2Url = `https://tile.openstreetmap.org/${zoom}/${x2}/${y}.png`
   $frame2.querySelectorAll('.tile').forEach(($tile, i) => {
-    $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x2}/${y + i}.png')`
+    $tile.style.backgroundImage = getImage(x2, y+i, zoom)
   })
 
   let lx3 = 256
   $frame3.querySelectorAll('.tile').forEach(($tile, i) => {
-    $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x3}/${y + i}.png')`
+    $tile.style.backgroundImage = getImage(x3, y+i, zoom)
   })
 
   timer = setInterval(function () {
@@ -242,7 +257,7 @@ function loop(zoom, y, x) {
       x1 = x2 - 1
       if (x1 < 0) x1 = xStart
       $frame1.querySelectorAll('.tile').forEach(($tile, i) => {
-        $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x1}/${y + i}.png')`
+        $tile.style.backgroundImage = getImage(x1, y+i, zoom)
       })
       if (x1 > 10) {
         let preloadImg = new Image()
@@ -266,7 +281,7 @@ function loop(zoom, y, x) {
       x2 = x3 - 1
       if (x2 < 0) x2 = xStart
       $frame2.querySelectorAll('.tile').forEach(($tile, i) => {
-        $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x2}/${y + i}.png')`
+        $tile.style.backgroundImage = getImage(x2, y+i, zoom)
       })
     }
     $frame2.style.left = lx2
@@ -277,7 +292,7 @@ function loop(zoom, y, x) {
       x3 = x1 - 1
       if (x3 < 0) x3 = xStart
       $frame3.querySelectorAll('.tile').forEach(($tile, i) => {
-        $tile.style.backgroundImage = `url('https://tile.openstreetmap.org/${zoom}/${x3}/${y + i}.png')`
+        $tile.style.backgroundImage = getImage(x3, y+i, zoom)
       })
     }
     $frame3.style.left = lx3
