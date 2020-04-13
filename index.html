@@ -171,17 +171,21 @@ function getZoomProps(zoom) {
   let pixelWidth = tileCount * 256
   let pixelsPerSecond = pixelWidth / (24 * 60 * 60)
   let stepSize = pixelsPerSecond / FPS
-  console.log({ zoom, tileCount, pixelsPerSecond, stepSize })
+  console.log('getZoomProps()', { zoom, tileCount, pixelsPerSecond, stepSize })
   return { tileCount, stepSize }
 }
 for (let z = 0; z <= 18; z++) {
   getZoomProps(z)
 }
 
+function long2tile(lon, zoom) { return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom))); }
+function lat2tile(lat, zoom)  { return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom))); }
+
 function getImage(x, y, z) {
+  return `url('https://khms1.googleapis.com/kh?v=865&hl=en&x=${x}&y=${y}&z=${z}')`
   return `url('https://tile.openstreetmap.org/${z}/${x}/${y}.png')`
-  // return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`
 }
+
 
 function changeZoom() {
   let zoom = parseInt(document.getElementById('zoom').value)
@@ -205,18 +209,22 @@ function changeXAxis() {
 let timer
 
 
-function loop(zoom, y, x) {
+function loop(zoom, y, x, lat, lon) {
+  console.log('loop()', { zoom, y, x, lat, lon })
   clearInterval(timer)
 
   let { tileCount, stepSize } = getZoomProps(zoom)
+
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('stepSize')) stepSize = parseInt(urlParams.get('stepSize'))
 
+  if (typeof lat !== 'undefined') y = lat2tile(lat, zoom)
+  if (typeof lon !== 'undefined') x = long2tile(lon, zoom)
+  console.log('loop()', { x, y, z: zoom })
+
   document.getElementById('y-axis').max = tileCount - 1
 
-  if (!y || (y >= tileCount)) {
-    y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
-  }
+  // if (!y || (y >= tileCount)) y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
 
   let xStart = x || tileCount - 1
 
@@ -225,9 +233,6 @@ function loop(zoom, y, x) {
   searchParams.set('x', xStart)
   searchParams.set('y', y)
   // window.location.search = searchParams.toString()
-
-  // let tileCount = Math.pow(2, zoom)
-  console.log({ tileCount, stepSize, x, y, zoom })
 
   let x3 = xStart
   let x2 = x3 - 1
@@ -305,13 +310,14 @@ window.onload = function() {
   let zoom = parseInt(urlParams.get('zoom')) || 0
   let y = parseInt(urlParams.get('y')) || 0
   let x = parseInt(urlParams.get('x')) || 0
-  // y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
+  let lat = parseFloat(urlParams.get('lat')) || undefined
+  let lon = parseFloat(urlParams.get('lon')) || undefined
 
   document.getElementById('zoom').value = zoom
   document.getElementById('y-axis').value = y
   document.getElementById('x-axis').value = x
 
-  loop(zoom, y, x)
+  loop(zoom, y, x, lat, lon)
 }
 </script>
 
