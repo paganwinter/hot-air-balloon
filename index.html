@@ -177,8 +177,12 @@ function lat2tile(lat, zoom)  { return (Math.floor((1 - Math.log(Math.tan(lat * 
 
 function getImage(x, y, z) {
   const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('type') === 'map') {
+  let type = urlParams.get('type')
+  if (type === 'map') {
     return `url('https://tile.openstreetmap.org/${z}/${x}/${y}.png')`
+  }
+  if (type === 'watercolor') {
+    return `url('http://tile.stamen.com/watercolor/${z}/${x}/${y}.png')`
   }
   return `url('https://khms1.googleapis.com/kh?v=865&hl=en&x=${x}&y=${y}&z=${z}')`
 }
