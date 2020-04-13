@@ -65,18 +65,12 @@ body {
   </div>
 </div>
 
-<input id="zoom" type="range" min="0" max="18" list="tickmarks" onchange="changeZoom(this.value)" />
-<input id="y-axis" type="range" min="0" max="1" onchange="changeYAxis(this.value)" />
-<!-- <input id="y-axis" type="number" onchange="changeYAxis(this.value)" /> -->
-<input id="x-axis" type="number" onchange="changeXAxis(this.value)" />
-<!-- <img src="https://tile.openstreetmap.org/7/63/42.png" /> -->
+zoom: <input id="zoom" type="number" min="0" max="18" value="10" onchange="change(this.value)" /><br />
+latitude: <input id="lat" type="number" min="-85" max="85" value="19.5" onchange="change(this.value)" /><br />
+longitude: <input id="lon" type="number" min="-180" max="180" value="73" onchange="change(this.value)" /><br />
 
 
 <script>
-// https://tile.openstreetmap.org/7/63/42.png
-
-// const FPS = 60
-// let frameWidth = 0
 // const screenWidth = document.body.clientWidth
 const metersPerPixelMap = {
   0: 156543.03,
@@ -186,31 +180,19 @@ function getImage(x, y, z) {
   return `url('https://tile.openstreetmap.org/${z}/${x}/${y}.png')`
 }
 
-
-function changeZoom() {
+function change() {
   let zoom = parseInt(document.getElementById('zoom').value)
-  let y = parseInt(document.getElementById('y-axis').value)
-  let x = parseInt(document.getElementById('x-axis').value)
-  loop(zoom, y, x)
-}
-function changeYAxis() {
-  let zoom = parseInt(document.getElementById('zoom').value)
-  let y = parseInt(document.getElementById('y-axis').value)
-  let x = parseInt(document.getElementById('x-axis').value)
-  loop(zoom, y, x)
-}
-function changeXAxis() {
-  let zoom = parseInt(document.getElementById('zoom').value)
-  let y = parseInt(document.getElementById('y-axis').value)
-  let x = parseInt(document.getElementById('x-axis').value)
-  loop(zoom, y, x)
+  let lat = parseFloat(document.getElementById('lat').value)
+  let lon = parseFloat(document.getElementById('lon').value)
+  loop({ zoom, lat, lon })
 }
 
 let timer
+function loop(opts) {
+  let { zoom, lat, lon } = opts
+  let x = long2tile(lon, zoom)
+  let y = lat2tile(lat, zoom)
 
-
-function loop(zoom, y, x, lat, lon) {
-  console.log('loop()', { zoom, y, x, lat, lon })
   clearInterval(timer)
 
   let { tileCount, stepSize } = getZoomProps(zoom)
@@ -218,11 +200,7 @@ function loop(zoom, y, x, lat, lon) {
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('stepSize')) stepSize = parseInt(urlParams.get('stepSize'))
 
-  if (typeof lat !== 'undefined') y = lat2tile(lat, zoom)
-  if (typeof lon !== 'undefined') x = long2tile(lon, zoom)
-  console.log('loop()', { x, y, z: zoom })
-
-  document.getElementById('y-axis').max = tileCount - 1
+  console.log('loop()', { lat, lon, zoom, x, y, tileCount, stepSize })
 
   // if (!y || (y >= tileCount)) y = (tileCount === 1) ? 0 : (tileCount / 2) - 1
 
@@ -307,17 +285,21 @@ function loop(zoom, y, x, lat, lon) {
 
 window.onload = function() {
   const urlParams = new URLSearchParams(window.location.search)
-  let zoom = parseInt(urlParams.get('zoom')) || 0
-  let y = parseInt(urlParams.get('y')) || 0
-  let x = parseInt(urlParams.get('x')) || 0
-  let lat = parseFloat(urlParams.get('lat')) || undefined
-  let lon = parseFloat(urlParams.get('lon')) || undefined
 
-  document.getElementById('zoom').value = zoom
-  document.getElementById('y-axis').value = y
-  document.getElementById('x-axis').value = x
 
-  loop(zoom, y, x, lat, lon)
+  if (urlParams.get('zoom') && urlParams.get('lat') && urlParams.get('lon')) {
+    let zoom = parseInt(urlParams.get('zoom'))
+    let lat = parseFloat(urlParams.get('lat'))
+    let lon = parseFloat(urlParams.get('lon'))
+
+    document.getElementById('zoom').value = zoom
+    document.getElementById('lat').value = lat
+    document.getElementById('lon').value = lon
+
+    loop({ zoom, lat, lon })
+  } else {
+    change()
+  }
 }
 </script>
 
