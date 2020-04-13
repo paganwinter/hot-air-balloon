@@ -8,5 +8,3 @@ https://paganwinter.github.io/hot-air-balloon
 
 eg:
 - https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73
-- https://paganwinter.github.io/hot-air-balloon?zoom=11&x=1440&y=912
-- https://paganwinter.github.io/hot-air-balloon?zoom=16&x=46187&y=29139
