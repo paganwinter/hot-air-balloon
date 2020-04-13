@@ -9,3 +9,4 @@ https://paganwinter.github.io/hot-air-balloon
 eg:
 - https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73
 - https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73&type=map
+- https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73&type=watercolor
