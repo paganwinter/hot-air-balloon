@@ -1,5 +1,7 @@
 # hot-air-balloon
 
+Ever imagined how the Earth would look if you were floating on a stationary hot air baloon?
+
 https://paganwinter.github.io/hot-air-balloon
 
 - zoom: 0 - 18 (default = 0)
