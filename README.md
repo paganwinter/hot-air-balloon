@@ -9,6 +9,9 @@ https://paganwinter.github.io/hot-air-balloon
 - y: 0 - (2^zoom) (default = (2^zoom)/2-1)
 
 eg:
-- https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73
 - https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73&type=map
+- https://paganwinter.github.io/hot-air-balloon/?zoom=10&lat=13.2&lon=78&type=map
+
+---
+- https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73
 - https://paganwinter.github.io/hot-air-balloon?zoom=11&lat=19.3&lon=73&type=watercolor
